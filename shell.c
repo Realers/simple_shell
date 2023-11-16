@@ -34,9 +34,9 @@ int main(void)
 				_runline(argv);
 			}
 		}
-		freeargs(argv);
 	}
 	free(cmd);
+	freeargs(argv);
 	free_list(head);
 	return (0);
 }

@@ -40,14 +40,3 @@ void _nonIntExit(void)
 		exit(0);
 	}
 }
-
-/**
- * printError - will print console errors
- * @argv: input command
- * @exitStatus: Exit code.
- */
-void printError(char *argv, int exitStatus)
-{
-	fprintf(stderr, "%s: %d: " , argv, exitStatus);
-	perror(argv);
-}
