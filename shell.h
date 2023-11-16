@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 
 extern char **environ;
 
@@ -46,5 +47,7 @@ void is_interactive(void);
 int checkCmdValidity(char **argv);
 
 void _nonIntExit(void);
+
+void printError(char *argv, int exitStatus);
 
 #endif

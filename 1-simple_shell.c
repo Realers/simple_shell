@@ -9,7 +9,7 @@ char **_splitstr(char *input)
 	char **words = NULL;
 	int count = 0;
 	char *token, *copy, *delim = " \t\n";
-	size_t len = 0;
+	size_t len = 0, wsize = 10;
 
 	copy = strdup(input);
 	if (copy == NULL)
@@ -20,21 +20,28 @@ char **_splitstr(char *input)
 	if (len > 0 && copy[len - 1] == '\n')
 		copy[len - 1] = '\0';
 	token =  strtok(copy, delim);
+	words = malloc(wsize * sizeof(char *));
+	if (words == NULL)
+		perror("Memory allocation failed"), exit(1);
 	while (token != NULL)
 	{
-		words = realloc(words, (count + 1) * sizeof(char *));
+		words[count] = strdup(token);
 		if (words == NULL)
 			perror("Memory allocation failed"), exit(1);
-		words[count] = strdup(token);
-		if (words[count] == NULL)
-			perror("Memory allocation failed"), exit(1);
 		count++, token = strtok(NULL, delim);
+		if (count % wsize == 0)
+		{
+			size_t nsize = (count / wsize + 1) * wsize;
+			words = realloc(words, nsize * sizeof(char *));
+			if (words == NULL)
+				perror("Memory allocation failed"), exit(1);
+		}
 	}
+	free(copy);
 	words = realloc(words, (count + 1) * sizeof(char *));
 	if (words == NULL)
 		perror("Memory allocation failed"), exit(1);
 	words[count] = NULL;
-	free(copy);
 	return (words);
 }
 /**
@@ -44,48 +51,7 @@ char **_splitstr(char *input)
  * @stream: stream type
  * Return: buff me location
  */
-ssize_t _getline(char **buff, size_t *n, FILE *stream)
-{
-	size_t init_size, final_size, len = 0;
-	char *line, *new_line;
-	int ch;
 
-	if (!buff || !n || !stream)
-		return (-1);
-	init_size = *n, line = *buff;
-	if (line == NULL)
-	{
-		line = malloc(init_size);
-		if (line == NULL)
-			return (-1);
-		*n = init_size;
-	}
-	while (1)
-	{
-		ch = fgetc(stream);
-		if (ch == EOF || ch == '\n')
-		{
-			if (len > 0 || (ch == '\n' && init_size > 0))
-			{
-				line[len] = '\0', *buff = line;
-				return (len);
-			}
-			else if (ch == EOF)
-			{
-				*buff = NULL;
-				return (-1);
-			}
-		}
-		if (len + 1 >= init_size)
-		{
-			final_size = init_size * 2, new_line = realloc(line, final_size);
-			if (new_line == NULL)
-				*buff = NULL;
-			return (-1);
-			line = new_line, *n = final_size;
-		} line[len++] = (char)ch;
-	}
-}
 
 /**
  * _runline - will fork wait and execute cmd
@@ -103,7 +69,7 @@ void _runline(char **argv)
 	}
 	if (!checkCmdValidity(argv))
 	{
-		perror(argv[0]);
+		fprintf(stderr, "%s: %s: not found\n", argv[0], argv[0]);
 		_nonIntExit();
 		return;
 	}
@@ -121,6 +87,8 @@ void _runline(char **argv)
 	else
 	{
 		waitpid(child, &status, 0);
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+			perror(argv[0]);
 		_nonIntExit();
 	}
 }
